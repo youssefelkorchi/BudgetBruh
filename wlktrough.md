@@ -2,7 +2,7 @@
 #### **Project Goal**
 Create a fun, interactive expense tracker that roasts users for their spending habits. No AI—just pre-written jokes, witty remarks, and playful features to keep users laughing while they track their finances.
 
----
+--
 
 ### **Step 1: Project Setup**
 #### **Tech Stack**

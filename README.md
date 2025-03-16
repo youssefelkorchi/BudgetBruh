@@ -1,4 +1,4 @@
-# Budget Bruh
+# Budget Bruh 1.0
 
 A hilarious finance tracker that roasts your spending habits. Built with React and Tailwind CSS.
 
