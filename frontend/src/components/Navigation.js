@@ -40,4 +40,42 @@ function Navigation() {
   );
 }
 
+function Navigation({ activeTab, setActiveTab }) {
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+    { id: 'expenses', label: 'Add Expense', icon: '💰' },
+    { id: 'roast', label: 'Roast Me', icon: '🔥' },
+    { id: 'stats', label: 'Stats', icon: '📈' },
+  ];
+
+  return (
+    <nav className="bg-white shadow-lg sticky top-0 z-50">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-center">
+          <div className="flex -mb-px overflow-x-auto scrollbar-hide">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative flex items-center px-6 py-4 text-sm font-medium transition-all duration-200 ease-in-out ${
+                  activeTab === tab.id
+                    ? 'text-purple-700 border-b-2 border-purple-600'
+                    : 'text-gray-500 hover:text-purple-600 hover:border-b-2 hover:border-purple-300'
+                }`}
+              >
+                <span className="mr-2">{tab.icon}</span>
+                {tab.label}
+                
+                {activeTab === tab.id && (
+                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-purple-400 to-purple-600"></span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
 export default Navigation;
