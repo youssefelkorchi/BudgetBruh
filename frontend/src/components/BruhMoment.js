@@ -1,39 +1,51 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-function BruhMoment({ isVisible, message, onClose }) {
-  if (!isVisible) return null;
-
+const BruhMoment = ({ isVisible, message, onClose }) => {
+  const [animation, setAnimation] = useState('translate-y-full');
+  
+  useEffect(() => {
+    if (isVisible) {
+      // Slide in animation
+      setTimeout(() => setAnimation('translate-y-0'), 100);
+      
+      // Auto close after 8 seconds
+      const timer = setTimeout(() => {
+        setAnimation('translate-y-full');
+        setTimeout(onClose, 500); // Call onClose after animation completes
+      }, 8000);
+      
+      return () => clearTimeout(timer);
+    } else {
+      setAnimation('translate-y-full');
+    }
+  }, [isVisible, onClose]);
+  
+  if (!isVisible && animation === 'translate-y-full') return null;
+  
   return (
-    <div className="fixed top-4 right-4 z-50 max-w-md transform transition-all duration-500 animate-bounce-slow">
-      <div className="bg-gradient-to-r from-red-600 to-pink-600 rounded-xl shadow-2xl overflow-hidden">
-        <div className="px-6 py-4 relative">
-          <button 
-            onClick={onClose}
-            className="absolute top-2 right-2 text-white opacity-70 hover:opacity-100 transition-opacity"
-          >
-            ✕
-          </button>
-          
-          <div className="flex items-start">
-            <div className="text-4xl mr-3">😱</div>
-            <div>
-              <h3 className="font-bold text-xl text-white mb-1">BRUH MOMENT!</h3>
-              <p className="text-white text-opacity-90">{message}</p>
-            </div>
+    <div 
+      className={`fixed bottom-0 left-0 right-0 bg-red-500 text-white p-6 shadow-lg transform transition-transform duration-500 ease-in-out ${animation} z-50`}
+    >
+      <div className="container mx-auto flex items-center justify-between">
+        <div className="flex items-center">
+          <span className="text-4xl mr-4">😱</span>
+          <div>
+            <h3 className="text-xl font-bold mb-1">BRUH MOMENT!</h3>
+            <p className="text-white">{message}</p>
           </div>
         </div>
-        
-        <div className="bg-white bg-opacity-10 px-6 py-2 text-right">
-          <button
-            onClick={onClose}
-            className="text-sm text-white text-opacity-80 hover:text-opacity-100 transition-opacity"
-          >
-            I'll do better next time (no you won't)
-          </button>
-        </div>
+        <button 
+          onClick={() => {
+            setAnimation('translate-y-full');
+            setTimeout(onClose, 500);
+          }}
+          className="bg-white text-red-500 px-4 py-2 rounded-lg hover:bg-red-100 transition duration-300"
+        >
+          I Know, I Know
+        </button>
       </div>
     </div>
   );
-}
+};
 
 export default BruhMoment;

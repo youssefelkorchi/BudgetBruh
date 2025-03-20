@@ -1,175 +1,273 @@
-import React, { useState } from 'react';
-import LoadingSpinner from './LoadingSpinner';
+import React, { useState, useEffect } from 'react';
+import { generateRoast } from '../utils/roastGenerator';
 
 function ExpenseForm() {
+  // Update the initial state
   const [expense, setExpense] = useState({
     amount: '',
     category: '',
     date: new Date().toISOString().split('T')[0],
     note: ''
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showTip, setShowTip] = useState(false);
+  const [roastShown, setRoastShown] = useState(false);
+  const [currentRoast, setCurrentRoast] = useState('');
+  const [roastIntensity, setRoastIntensity] = useState('medium');
 
   const categories = [
-    { value: 'food', label: 'Food', icon: '🍔', color: 'from-orange-400 to-red-500' },
-    { value: 'entertainment', label: 'Entertainment', icon: '🎮', color: 'from-blue-400 to-indigo-500' },
-    { value: 'bills', label: 'Bills', icon: '💸', color: 'from-red-400 to-pink-500' },
-    { value: 'shopping', label: 'Shopping', icon: '🛍️', color: 'from-green-400 to-teal-500' },
-    { value: 'transport', label: 'Transport', icon: '🚗', color: 'from-yellow-400 to-amber-500' },
-    { value: 'impulse', label: 'Impulse Buys', icon: '🤪', color: 'from-purple-400 to-violet-500' }
+    { value: 'food', label: 'Food & Drinks (Your Stomach\'s Demands)' },
+    { value: 'entertainment', label: 'Entertainment (Your Happiness Tax)' },
+    { value: 'shopping', label: 'Shopping (The "Needs")' },
+    { value: 'bills', label: 'Bills (The Unavoidable Pain)' },
+    { value: 'travel', label: 'Travel (Escaping Reality)' },
+    { value: 'health', label: 'Health (Body Maintenance)' },
+    { value: 'other', label: 'Other (The Mysterious Money Pit)' }
   ];
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      // Reset form or show success message
-    }, 1500);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setExpense(prev => ({ ...prev, [name]: value }));
   };
 
-  if (isSubmitting) {
-    return <LoadingSpinner />;
-  }
+  // Update the handleSubmit function to ensure the note is properly saved
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Validate form
+    if (!expense.amount || !expense.category) {
+      alert("Don't try to hide your spending! Fill out all required fields.");
+      return;
+    }
+  
+    // Parse amount as number
+    const amountNum = parseFloat(expense.amount);
+    
+    // Create expense object with timestamp and roast intensity
+    // In the handleSubmit function:
+    const newExpense = {
+      ...expense,
+      amount: amountNum,
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      roastIntensity: roastIntensity // Make sure this line exists
+    };
+  
+    // Get existing expenses from localStorage
+    const existingExpenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+    
+    // Add new expense
+    const updatedExpenses = [...existingExpenses, newExpense];
+    
+    // Save to localStorage
+    localStorage.setItem('expenses', JSON.stringify(updatedExpenses));
+  
+    // Dispatch event to notify other components
+    const expenseAddedEvent = new CustomEvent('expenseAdded', { 
+      detail: { expense: newExpense } 
+    });
+    window.dispatchEvent(expenseAddedEvent);
+    
+    // Generate and show roast
+    const roast = generateRoast(newExpense.category, amountNum, roastIntensity);
+    setCurrentRoast(roast);
+    setRoastShown(true);
+  
+    // Check for Bruh Moment (large expense)
+    if (amountNum >= 100) {
+      // Trigger Bruh Moment alert via custom event
+      const bruhEvent = new CustomEvent('bruhMoment', { 
+        detail: { 
+          expense: newExpense,
+          message: `$${amountNum} on ${newExpense.category}? Bruh, did you really need that? 💸`
+        } 
+      });
+      window.dispatchEvent(bruhEvent);
+    }
+  
+    // Reset form
+    setExpense({
+      amount: '',
+      category: '',
+      date: new Date().toISOString().split('T')[0],
+      note: ''
+    });
+  };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all duration-300 hover:shadow-2xl relative">
-      {/* Decorative elements */}
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-100 rounded-full opacity-50 blur-xl"></div>
-      <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-100 rounded-full opacity-50 blur-xl"></div>
-      
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-700 px-8 py-6 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10">
-          <div className="absolute top-5 left-5 w-20 h-20 rounded-full bg-white"></div>
-          <div className="absolute bottom-5 right-10 w-16 h-16 rounded-full bg-white"></div>
+    <div className="max-w-2xl mx-auto">
+      <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+        <h2 className="text-2xl font-bold text-purple-600 mb-4">Confess Your Financial Sins</h2>
+        <p className="text-gray-600 mb-6">Let's see how much damage you've done to your wallet today.</p>
+        
+        {/* Roast Intensity Selector */}
+        <div className="mb-6">
+          <label className="block text-gray-700 mb-2">Roast Intensity:</label>
+          <div className="flex space-x-4">
+            <button 
+              type="button"
+              onClick={() => setRoastIntensity('soft')}
+              className={`px-4 py-2 rounded-lg flex items-center ${roastIntensity === 'soft' 
+                ? 'bg-green-100 text-green-800 border-2 border-green-300' 
+                : 'bg-gray-100 text-gray-700'}`}
+            >
+              <span className="text-xl mr-2">🥲</span> Soft Roast
+            </button>
+            <button 
+              type="button"
+              onClick={() => setRoastIntensity('medium')}
+              className={`px-4 py-2 rounded-lg flex items-center ${roastIntensity === 'medium' 
+                ? 'bg-orange-100 text-orange-800 border-2 border-orange-300' 
+                : 'bg-gray-100 text-gray-700'}`}
+            >
+              <span className="text-xl mr-2">🔥</span> Medium Roast
+            </button>
+            <button 
+              type="button"
+              onClick={() => setRoastIntensity('brutal')}
+              className={`px-4 py-2 rounded-lg flex items-center ${roastIntensity === 'brutal' 
+                ? 'bg-red-100 text-red-800 border-2 border-red-300' 
+                : 'bg-gray-100 text-gray-700'}`}
+            >
+              <span className="text-xl mr-2">💀</span> Brutal Roast
+            </button>
+          </div>
         </div>
         
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-extrabold text-white tracking-tight">Confess Your Spending</h2>
-            <p className="text-purple-200 text-sm mt-1">We promise to judge... hilariously</p>
-          </div>
-          <div className="text-4xl animate-bounce">💸</div>
-        </div>
-      </div>
-      
-      <form onSubmit={handleSubmit} className="p-8 relative">
-        <div className="space-y-8">
-          {/* Amount Input with fun animation */}
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-              <span className="mr-2">How much damage?</span>
-              <button 
-                type="button" 
-                className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full hover:bg-purple-200 transition-colors"
-                onClick={() => setShowTip(!showTip)}
-              >
-                💡 Tip
-              </button>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-2" htmlFor="amount">
+              Amount:
             </label>
-            
-            {showTip && (
-              <div className="absolute right-0 top-0 mt-8 bg-purple-50 border border-purple-200 p-3 rounded-lg shadow-lg z-10 text-sm text-purple-700 max-w-xs animate-fade-in">
-                The bigger the number, the spicier the roast! Are you brave enough?
-                <div className="absolute -top-2 right-4 w-4 h-4 bg-purple-50 border-t border-l border-purple-200 transform rotate-45"></div>
-              </div>
-            )}
-            
-            <div className="relative mt-1 rounded-md shadow-sm group">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-500 sm:text-sm group-hover:text-purple-500 transition-colors">$</span>
-              </div>
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-gray-500">$</span>
               <input
                 type="number"
+                id="amount"
+                name="amount"
                 value={expense.amount}
-                onChange={(e) => setExpense({...expense, amount: e.target.value})}
-                className="focus:ring-purple-500 focus:border-purple-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-lg py-4 transition-all duration-200 hover:border-purple-300"
+                onChange={handleChange}
                 placeholder="How much did you waste this time?"
+                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                step="0.01"
+                min="0"
                 required
               />
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <span className="text-gray-400 sm:text-sm">USD</span>
-              </div>
             </div>
           </div>
           
-          {/* Category Selection with gradient cards */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">What's your excuse?</label>
-            <div className="grid grid-cols-3 gap-4">
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-2" htmlFor="category">
+              Category:
+            </label>
+            <select
+              id="category"
+              name="category"
+              value={expense.category}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              required
+            >
+              <option value="">Select your financial downfall...</option>
               {categories.map(cat => (
-                <button
-                  key={cat.value}
-                  type="button"
-                  onClick={() => setExpense({...expense, category: cat.value})}
-                  className={`relative overflow-hidden rounded-xl transition-all duration-300 ${
-                    expense.category === cat.value
-                      ? 'ring-4 ring-purple-500 ring-opacity-50 transform scale-105'
-                      : 'hover:shadow-md'
-                  }`}
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-${expense.category === cat.value ? '100' : '80'}`}></div>
-                  <div className="relative p-4 flex flex-col items-center justify-center h-24">
-                    <span className="text-3xl mb-2">{cat.icon}</span>
-                    <span className={`text-sm font-medium ${expense.category === cat.value ? 'text-white' : 'text-white text-opacity-90'}`}>
-                      {cat.label}
-                    </span>
-                  </div>
-                </button>
+                <option key={cat.value} value={cat.value}>{cat.label}</option>
               ))}
-            </div>
+            </select>
           </div>
           
-          {/* Date Input with custom styling */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">When did this happen?</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-500">📅</span>
-              </div>
-              <input
-                type="date"
-                value={expense.date}
-                onChange={(e) => setExpense({...expense, date: e.target.value})}
-                className="focus:ring-purple-500 focus:border-purple-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-4 transition-all duration-200 hover:border-purple-300"
-                required
-              />
-            </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-2" htmlFor="date">
+              Date of Damage:
+            </label>
+            <input
+              type="date"
+              id="date"
+              name="date"
+              value={expense.date}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              required
+            />
           </div>
           
-          {/* Note Input with character count */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Any regrets? (Optional)</label>
-            <div className="relative">
-              <textarea
-                value={expense.note}
-                onChange={(e) => setExpense({...expense, note: e.target.value})}
-                rows="3"
-                className="focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-lg transition-all duration-200 hover:border-purple-300"
-                placeholder="Tell us the sad story behind this expense..."
-              ></textarea>
-              <div className="absolute bottom-2 right-2 text-xs text-gray-400">
-                {expense.note.length}/100
-              </div>
-            </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-2" htmlFor="note">
+              Note (Optional):
+            </label>
+            <textarea
+              id="note"
+              name="note"
+              value={expense.note}
+              onChange={handleChange}
+              placeholder="What's your excuse for this expense?"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 h-24"
+              rows="3"
+            />
           </div>
           
-          {/* Submit button with animation */}
           <button
             type="submit"
-            className="w-full flex justify-center items-center py-4 px-6 border border-transparent rounded-xl text-base font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 transition duration-300 font-medium text-lg"
           >
-            <span className="mr-2 text-xl">🔥</span>
-            Roast Me For This Decision
+            Confess Your Spending Sins
           </button>
+        </form>
+      </div>
+      
+      {/* Roast Display */}
+      {roastShown && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8 rounded-lg">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <span className="text-2xl">😂</span>
+            </div>
+            <div className="ml-3">
+              <p className="text-yellow-700 font-medium">{currentRoast}</p>
+              <button 
+                onClick={() => setRoastShown(false)} 
+                className="text-sm text-yellow-600 hover:text-yellow-800 mt-2"
+              >
+                Hide (but you can't hide from the truth)
+              </button>
+            </div>
+          </div>
         </div>
-      </form>
+      )}
+      
+      {/* Expense List Preview */}
+      <ExpenseListPreview />
     </div>
   );
 }
+
+// Simple preview of recent expenses
+// Update the ExpenseListPreview component
+
+const ExpenseListPreview = () => {
+  const [recentExpenses, setRecentExpenses] = useState([]);
+  
+  useEffect(() => {
+    const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+    setRecentExpenses(expenses.slice(-3).reverse()); // Get last 3 expenses
+  }, []);
+  
+  if (recentExpenses.length === 0) return null;
+  
+  return (
+    <div className="bg-white rounded-2xl shadow-xl p-8">
+      <h3 className="text-xl font-bold text-purple-600 mb-4">Your Recent Bad Decisions</h3>
+      <div className="space-y-4">
+        {recentExpenses.map(exp => (
+          <div key={exp.id} className="border-l-4 border-purple-400 pl-4 py-2">
+            <div className="flex justify-between">
+              <p className="font-medium">${parseFloat(exp.amount).toFixed(2)} - {exp.category}</p>
+              <p className="text-gray-500">{new Date(exp.date).toLocaleDateString()}</p>
+            </div>
+            {exp.note && <p className="text-gray-600 text-sm mt-1">{exp.note}</p>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export default ExpenseForm;

@@ -1,41 +1,36 @@
 import React from 'react';
 
-function Navigation({ activeTab, setActiveTab }) {
+const Navigation = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'expenses', label: 'Add Expense', icon: '💰' },
-    { id: 'roast', label: 'Roast Me', icon: '🔥' },
-    { id: 'stats', label: 'Stats', icon: '📈' },
+    { id: 'expenses', label: 'Add Expense', icon: '💸' },
+    { id: 'history', label: 'History', icon: '📝' },
+    { id: 'stats', label: 'Statistics', icon: '📈' },
+    { id: 'roast', label: 'Roast Me', icon: '🔥' }
   ];
-
+  
   return (
-    <nav className="bg-white shadow-lg sticky top-0 z-50">
+    <nav className="bg-white shadow-md py-2 sticky top-0 z-10">
       <div className="container mx-auto px-4">
-        <div className="flex justify-center">
-          <div className="flex -mb-px overflow-x-auto scrollbar-hide">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative flex items-center px-6 py-4 text-sm font-medium transition-all duration-200 ease-in-out ${
-                  activeTab === tab.id
-                    ? 'text-purple-700 border-b-2 border-purple-600'
-                    : 'text-gray-500 hover:text-purple-600 hover:border-b-2 hover:border-purple-300'
-                }`}
-              >
-                <span className="mr-2">{tab.icon}</span>
-                {tab.label}
-                
-                {activeTab === tab.id && (
-                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-purple-400 to-purple-600"></span>
-                )}
-              </button>
-            ))}
-          </div>
+        <div className="flex justify-center md:justify-start space-x-1 md:space-x-4 overflow-x-auto">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'bg-purple-100 text-purple-700 font-medium'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <span className="mr-2">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
     </nav>
   );
-}
+};
 
 export default Navigation;

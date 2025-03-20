@@ -1,15 +1,79 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { categoryInfo } from '../utils/roastGenerator';
 
 function Dashboard() {
-  // Dummy data for demonstration
-  const totalSpent = 500;
-  const lastExpenseDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000); // 3 days ago
+  // State for data
+  const [recentExpenses, setRecentExpenses] = useState([]);
+  const [totalSpent, setTotalSpent] = useState(0);
+  const [lastExpenseDate, setLastExpenseDate] = useState(new Date(Date.now() - 3 * 24 * 60 * 60 * 1000));
   
-  const recentExpenses = [
-    { date: '2023-11-20', category: 'Food 🍔', amount: 50, roastLevel: '🔥 Medium' },
-    { date: '2023-11-18', category: 'Entertainment 🎮', amount: 75, roastLevel: '💀 Brutal' },
-    { date: '2023-11-15', category: 'Shopping 🛍️', amount: 120, roastLevel: '🥲 Soft' },
-  ];
+  // Load expenses from localStorage
+  useEffect(() => {
+    const loadExpenseData = () => {
+      const allExpenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+      
+      // Sort by timestamp or id (newest first)
+      const sortedExpenses = allExpenses.sort((a, b) => {
+        if (a.timestamp && b.timestamp) {
+          return new Date(b.timestamp) - new Date(a.timestamp);
+        }
+        return b.id - a.id;
+      });
+      
+      // Get only the 3 most recent expenses
+      setRecentExpenses(sortedExpenses.slice(0, 3));
+      
+      // Set last expense date if there are any expenses
+      if (sortedExpenses.length > 0) {
+        setLastExpenseDate(new Date(sortedExpenses[0].date));
+      }
+      
+      // Calculate total spent in the last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const recentTotal = allExpenses
+        .filter(exp => new Date(exp.date) >= thirtyDaysAgo)
+        .reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
+      
+      setTotalSpent(recentTotal);
+    };
+    
+    // Load expenses initially
+    loadExpenseData();
+    
+    // Set up event listener for new expenses
+    const handleExpenseAdded = () => loadExpenseData();
+    window.addEventListener('expenseAdded', handleExpenseAdded);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('expenseAdded', handleExpenseAdded);
+    };
+  }, []);
+  
+  // Format date for display
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+  
+  // Get category with icon
+  const getCategoryWithIcon = (category) => {
+    const info = categoryInfo[category] || { icon: '❓' };
+    return `${info.icon} ${category.charAt(0).toUpperCase() + category.slice(1)}`;
+  };
+  
+  // Get roast level based on intensity
+  const getRoastLevel = (expense) => {
+    // Check for roastIntensity property directly
+    const intensity = expense.roastIntensity;
+    
+    // Return appropriate icon based on intensity
+    if (intensity === 'brutal') return '💀 Brutal';
+    if (intensity === 'soft') return '🥲 Soft';
+    return '🔥 Medium';
+  };
 
   return (
     <div className="space-y-6">
@@ -35,11 +99,17 @@ function Dashboard() {
           {/* Content */}
           <div className="p-6">
             <div className="text-4xl font-bold text-gray-800 flex items-baseline">
-              ${totalSpent}
-              <span className="text-sm text-gray-500 ml-2">this month</span>
+              ${totalSpent.toFixed(2)}
+              <span className="text-sm text-gray-500 ml-2">last 30 days</span>
             </div>
             <p className="mt-3 text-gray-600 italic">
-              Congrats, you're basically a millionaire... in debt!
+              {totalSpent > 1000 
+                ? "Congrats, you're basically a millionaire... in debt!" 
+                : totalSpent > 500 
+                  ? "Your wallet is crying in the corner right now."
+                  : totalSpent > 0 
+                    ? "Not too shabby, but there's still room for improvement."
+                    : "No expenses? Either you're incredibly frugal or you're hiding something."}
             </p>
           </div>
         </div>
@@ -111,17 +181,25 @@ function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {recentExpenses.map((expense, index) => (
-                  <tr 
-                    key={index} 
-                    className="border-b border-gray-200 hover:bg-purple-50 transition-colors duration-150"
-                  >
-                    <td className="py-3 px-4 text-gray-700">{expense.date}</td>
-                    <td className="py-3 px-4 text-gray-700">{expense.category}</td>
-                    <td className="py-3 px-4 text-gray-700">${expense.amount}</td>
-                    <td className="py-3 px-4 text-gray-700">{expense.roastLevel}</td>
+                {recentExpenses.length > 0 ? (
+                  recentExpenses.map((expense, index) => (
+                    <tr 
+                      key={index} 
+                      className="border-b border-gray-200 hover:bg-purple-50 transition-colors duration-150"
+                    >
+                      <td className="py-3 px-4 text-gray-700">{formatDate(expense.date)}</td>
+                      <td className="py-3 px-4 text-gray-700">{getCategoryWithIcon(expense.category)}</td>
+                      <td className="py-3 px-4 text-gray-700">${parseFloat(expense.amount).toFixed(2)}</td>
+                      <td className="py-3 px-4 text-gray-700">{getRoastLevel(expense)}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="py-6 text-center text-gray-500">
+                      No expenses yet. Add some questionable financial decisions!
+                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

@@ -1,6 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 function Header() {
+  const [randomYear, setRandomYear] = useState(2023);
+  
+  useEffect(() => {
+    // Generate a random year between 1980 and current year
+    const currentYear = new Date().getFullYear();
+    const startYear = 1980;
+    const randomStartYear = Math.floor(Math.random() * (currentYear - startYear + 1)) + startYear;
+    setRandomYear(randomStartYear);
+  }, []);
+
   return (
     <header className="relative bg-gradient-to-r from-brand-700 to-brand-900 text-white py-8">
       {/* Abstract shapes in background */}
@@ -23,7 +33,7 @@ function Header() {
           </p>
           
           <div className="mt-6 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm">
-            <span className="text-brand-100">Making poor financial decisions look good since 2023</span>
+            <span className="text-brand-100">Making poor financial decisions look good since {randomYear}</span>
           </div>
         </div>
       </div>
