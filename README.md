@@ -1,5 +1,4 @@
-=# Budget Bruh Frontend
-
+## Budget Bruh v0.1
 The React frontend for **Budget Bruh** – a finance tracker that roasts your spending habits with humor and attitude.
 
 > ⚠️ **Note:** This project is currently under active development. Features may change and improvements are ongoing.
