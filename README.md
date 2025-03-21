@@ -6,6 +6,9 @@ The React frontend for **Budget Bruh** – a finance tracker that roasts your sp
 ## 🚀 Quick Start
 
 ```bash
+# Navigate to the frontend directory
+cd frontend
+
 # Install dependencies
 npm install
 
